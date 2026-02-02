@@ -11,6 +11,9 @@ param(
   [Parameter(Mandatory = $false)]
   [string] $MainScad = "cad/src/main.scad",
 
+  [Parameter(Mandatory = $false)]
+  [string] $OpenScadPath,
+
   [switch] $DryRun
 )
 
@@ -18,6 +21,42 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Write-Info([string] $Message) { Write-Host "[scad] $Message" }
+
+function Resolve-OpenScadExe {
+  param([string] $ExplicitPath)
+
+  if ($ExplicitPath) {
+    if (-not (Test-Path $ExplicitPath)) { throw "OpenSCAD not found at -OpenScadPath: $ExplicitPath" }
+    return $ExplicitPath
+  }
+
+  $cmd = Get-Command openscad -ErrorAction SilentlyContinue
+  if ($cmd -and $cmd.Source) { return $cmd.Source }
+
+  $known = @(
+    "C:\Program Files\OpenSCAD\openscad.exe",
+    "C:\Program Files (x86)\OpenSCAD\openscad.exe"
+  )
+  foreach ($p in $known) {
+    if (Test-Path $p) { return $p }
+  }
+
+  $appPaths = @(
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\openscad.exe",
+    "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\openscad.exe"
+  )
+  foreach ($k in $appPaths) {
+    if (Test-Path $k) {
+      try {
+        $p = (Get-ItemProperty $k)."(default)"
+        if ($p -and (Test-Path $p)) { return $p }
+      } catch {
+      }
+    }
+  }
+
+  throw "OpenSCAD CLI not found. Install OpenSCAD or pass -OpenScadPath."
+}
 
 function ConvertTo-OpenScadValue {
   param([object] $Value)
@@ -50,6 +89,7 @@ function ConvertTo-OpenScadDefines {
 
   $args = @()
   foreach ($key in ($ConfigData.Keys | Sort-Object)) {
+    if ($key -eq "part") { continue } # string quoting is fragile on Windows; use part_id
     $val = ConvertTo-OpenScadValue -Value $ConfigData[$key]
     $args += @("-D", "$key=$val")
   }
@@ -72,6 +112,21 @@ function ConvertTo-Hashtable {
 
 $configObj = Get-Content $Config -Raw | ConvertFrom-Json
 $configData = ConvertTo-Hashtable -Object $configObj
+
+function Resolve-PartId {
+  param([hashtable] $ConfigData)
+
+  if ($ConfigData.ContainsKey("part_id")) { return [int]$ConfigData["part_id"] }
+  if ($ConfigData.ContainsKey("part")) {
+    $p = [string]$ConfigData["part"]
+    if ($p -eq "feed_mount") { return 0 }
+    if ($p -eq "fit_sleeve") { return 1 }
+    throw "Unknown part name '$p'. Add 'part_id' to the config."
+  }
+  return 0
+}
+
+$configData["part_id"] = Resolve-PartId -ConfigData $configData
 if (-not $PartName) {
   if ($configData.ContainsKey("part")) {
     $PartName = [string]$configData["part"]
@@ -98,14 +153,13 @@ if ($DryRun) {
   exit 0
 }
 
-if (-not (Get-Command openscad -ErrorAction SilentlyContinue)) {
-  throw "OpenSCAD CLI not found on PATH. Install OpenSCAD and ensure 'openscad' is available."
-}
+$openscadExe = Resolve-OpenScadExe -ExplicitPath $OpenScadPath
+Write-Info "OpenSCAD: $openscadExe"
 
 Write-Info "Exporting STL -> $outStl"
-& openscad @("-o", $outStl, $MainScad) @defines | Out-Host
+& $openscadExe @("-o", $outStl, $MainScad) @defines | Out-Host
 
 Write-Info "Rendering PNG -> $outPng"
-& openscad @("-o", $outPng, $MainScad, "--imgsize=1200,900", "--viewall") @defines | Out-Host
+& $openscadExe @("-o", $outPng, $MainScad, "--imgsize=1200,900", "--viewall") @defines | Out-Host
 
 Write-Info "Done."

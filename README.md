@@ -459,11 +459,12 @@ This project is still worth pursuing because:
 ## Measurements captured / assumptions (current hardware)
 
 * **Dish diameter (reflector):** **13 in** (approx. 330 mm)
-* **Estimated focal length (approx.):** **4.5 in** (approx. 114 mm)
+* **Estimated focal length (approx.):** **4.5 in** (approx. 114 mm) (informational only; primary datum is the existing tube tip)
 * **Radome headroom (assumed):** **~1–2 in** above the intended feed reference point (we will design to fit within this without requiring an exact measurement for the first iteration)
-* **Metal post/tube (assumed):**
-  * **Acts as the RF conduit:** internal clearance is assumed to be sufficient to route an SMA pigtail/coax (exact ID not required for the first iteration)
-  * **Acts as a mounting reference:** exact OD is treated as a “fit/adjust” variable for the first iteration (design intent is an adjustable clamp/sleeve rather than a tight press-fit)
+* **Plastic tube (measured):**
+  * **Outer diameter (OD):** **33 mm**
+  * **Length (metal post top → tube tip):** **33 mm**
+  * **Feed reference datum:** the **tube tip** is treated as the **focal-point reference** for the first iteration
 
 ## Old Ku feed assembly (what’s there today)
 
@@ -473,22 +474,34 @@ The original Ku feed stack appears to be a bonded/glued assembly:
 * **Plastic tube section** (middle): bonded to the metal post/tube
 * **Metal reflector/cap** (top): bonded to the plastic tube
 
-## Revised mechanical plan (remove old feed; reuse metal post as conduit)
+## Revised mechanical plan (prototype around the existing plastic tube datum)
 
-Goal: remove the Ku-band feed parts entirely, and use the existing metal post/tube only as a protected route for the RF line.
+The goal for the first iteration is to keep the existing center stack (metal post/tube + 33 mm plastic tube) and use the plastic tube as the mechanical datum for a printable helical former.
 
-* **Remove** the old plastic tube and metal reflector/cap so the new L-band feed “sees” the dish directly.
-* **Reuse** the existing **metal post/tube as an SMA/coax conduit** down into the dome (strain-relieved and kept from rubbing the metal).
-* **Mount** the new feed on a 3D-printed bracket/clamp that references the metal post/tube (or nearby structure), and positions the radiating element at the intended focus.
+* The new feed former will **slip over the 33 mm OD plastic tube** (no bolt pattern needed for the first iteration).
+* The former can expand to a larger diameter (e.g., ~60–65 mm OD) to support the required 1694.1 MHz helix geometry (typical helix diameter is larger than 33 mm).
+* Later iterations will add **grooves** to guide the helix turns and keep the radiating element centered on the dish axis.
+
+### First prototype: slip-fit + radome clearance cylinder (no grooves)
+
+To validate fit and packaging before adding grooves:
+
+* Print a simple hollow cylinder that **slips over the 33 mm OD plastic tube**.
+* Make the cylinder **66 mm long** so the **tube tip (focus datum)** sits at the **mid-plane** of the print:
+  * bottom of print at **-33 mm**
+  * tube tip / focus at **0 mm**
+  * top of print at **+33 mm**
+* This prototype is strictly for:
+  * **slip-fit tuning** (clearance)
+  * **radome clearance check** (does it collide when closing the dome?)
 
 ## Still needed before printing a final-fit design
 
 For the first-pass design we are explicitly proceeding with the assumptions above. These items are only needed if/when we want a final-fit, dimension-locked print:
 
-1. **Metal post/tube dimensions (OD + ID):** to make a non-adjustable, tight-fitting mount and to guarantee the SMA routing clearance.
-2. **Reference height for feed placement:** to confirm the **114 mm (4.5")** focus assumption (or replace it with a single measured “dish vertex → desired feed center” distance).
-3. **Radome clearance (hard number):** to maximize feed performance without risking interference with the dome.
-4. **Chosen wire diameter** for the helix (if using a helix feed) to finalize groove width/depth and retention features.
+1. **Radome clearance (hard number):** to maximize feed performance without risking interference with the dome.
+2. **Chosen wire diameter** for the helix to finalize groove width/depth and retention features.
+3. **Plastic tube ID** (only if we decide to switch from slip-over to plug-in geometry).
 
 Once these are known, the 3D-printed mount and feed former can be fully specified for a repeatable build.
 
@@ -502,19 +515,24 @@ This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed 
 
 * `cad/src/` - OpenSCAD source (`main.scad` entrypoint + part modules)
 * `cad/configs/` - Parameter sets (JSON) for specific revisions
-* `cad/revisions/` - Frozen revision outputs (STL/PNG + `params.json`)
+* `cad/revisions/` - Local revision snapshot outputs (generated; ignored by git)
 * `cad/out/` - Scratch build outputs (generated; ignored by git)
 * `scripts/` - PowerShell helpers for building and creating revisions
 
 ## Prerequisites
 
 * OpenSCAD installed locally and `openscad` available on your `PATH`.
+* Note: configs use a numeric `part_id` for part selection (Windows `-D` string quoting is fragile).
 
 ## Common commands
 
 * Build a part to scratch output:
   * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Config cad/configs/rev_0001.json -PartName feed_mount -OutDir cad/out`
+  * If `openscad` is not on `PATH`, pass `-OpenScadPath` (recommended on Windows):
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Config cad/configs/rev_0001.json -PartName feed_mount -OutDir cad/out -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
 * Snapshot a new numbered revision (creates `cad/revisions/rev_000N/` and `cad/configs/rev_000N.json`):
   * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -BaseConfig cad/configs/rev_0001.json -PartName feed_mount`
+  * With explicit OpenSCAD path:
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -BaseConfig cad/configs/rev_0001.json -PartName feed_mount -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
 
 See `playbooks/how_to_iterate_openscad_designs.md` for the full workflow.

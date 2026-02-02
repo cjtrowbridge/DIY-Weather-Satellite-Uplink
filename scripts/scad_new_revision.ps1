@@ -14,6 +14,9 @@ param(
   [Parameter(Mandatory = $false)]
   [string] $MainScad = "cad/src/main.scad",
 
+  [Parameter(Mandatory = $false)]
+  [string] $OpenScadPath,
+
   [switch] $DryRun
 )
 
@@ -97,6 +100,9 @@ $buildArgs = @(
   "-OutDir", $revDir,
   "-MainScad", $MainScad
 )
+if ($OpenScadPath) {
+  $buildArgs += @("-OpenScadPath", $OpenScadPath)
+}
 if ($DryRun) { $buildArgs += "-DryRun" }
 
 Write-Info "Building artifacts into: $revDir"

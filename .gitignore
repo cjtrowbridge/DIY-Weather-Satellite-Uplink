@@ -1,8 +1,14 @@
 # Generated CAD artifacts (scratch)
 cad/out/
 
+# Generated CAD artifacts (revision snapshots)
+cad/revisions/
+
+# CAD exports (in case they end up elsewhere)
+**/*.stl
+**/*.png
+
 # Common OS/editor noise
 Thumbs.db
 Desktop.ini
 .DS_Store
-
