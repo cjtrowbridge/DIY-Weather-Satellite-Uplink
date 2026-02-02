@@ -491,3 +491,30 @@ For the first-pass design we are explicitly proceeding with the assumptions abov
 4. **Chosen wire diameter** for the helix (if using a helix feed) to finalize groove width/depth and retention features.
 
 Once these are known, the 3D-printed mount and feed former can be fully specified for a repeatable build.
+
+---
+
+# OpenSCAD Prototyping Pipeline (Local)
+
+This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed + mount geometry and snapshot numbered revisions as the design evolves.
+
+## Folder layout
+
+* `cad/src/` - OpenSCAD source (`main.scad` entrypoint + part modules)
+* `cad/configs/` - Parameter sets (JSON) for specific revisions
+* `cad/revisions/` - Frozen revision outputs (STL/PNG + `params.json`)
+* `cad/out/` - Scratch build outputs (generated; ignored by git)
+* `scripts/` - PowerShell helpers for building and creating revisions
+
+## Prerequisites
+
+* OpenSCAD installed locally and `openscad` available on your `PATH`.
+
+## Common commands
+
+* Build a part to scratch output:
+  * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Config cad/configs/rev_0001.json -PartName feed_mount -OutDir cad/out`
+* Snapshot a new numbered revision (creates `cad/revisions/rev_000N/` and `cad/configs/rev_000N.json`):
+  * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -BaseConfig cad/configs/rev_0001.json -PartName feed_mount`
+
+See `playbooks/how_to_iterate_openscad_designs.md` for the full workflow.

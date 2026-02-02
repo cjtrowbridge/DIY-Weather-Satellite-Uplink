@@ -1,0 +1,8 @@
+# Generated CAD artifacts (scratch)
+cad/out/
+
+# Common OS/editor noise
+Thumbs.db
+Desktop.ini
+.DS_Store
+

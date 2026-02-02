@@ -70,6 +70,7 @@ Current playbooks:
 * `playbooks/how_to_create_a_new_playbook.md` - How to create a new operational playbook (scope, template, and lifecycle requirements).
 * `playbooks/how_to_commit_and_push_changes.md` - How to summarize, approve, commit, and push changes safely.
 * `playbooks/debugging_changes_that_lead_to_errors.md` - Evidence-first debugging workflow for changes that cause errors.
+* `playbooks/how_to_iterate_openscad_designs.md` - Local OpenSCAD workflow for building outputs and snapshotting numbered design revisions.
 
 ## 5. Project Organization
 
