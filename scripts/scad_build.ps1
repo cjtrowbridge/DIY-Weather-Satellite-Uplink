@@ -1,4 +1,7 @@
 param(
+  [Parameter(Mandatory = $false)]
+  [string] $Design = "helical",
+
   [Parameter(Mandatory = $true)]
   [string] $Config,
 
@@ -6,10 +9,10 @@ param(
   [string] $PartName,
 
   [Parameter(Mandatory = $false)]
-  [string] $OutDir = "cad/out",
+  [string] $OutDir,
 
   [Parameter(Mandatory = $false)]
-  [string] $MainScad = "cad/src/main.scad",
+  [string] $MainScad,
 
   [Parameter(Mandatory = $false)]
   [string] $OpenScadPath,
@@ -21,6 +24,9 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Write-Info([string] $Message) { Write-Host "[scad] $Message" }
+
+if (-not $OutDir) { $OutDir = Join-Path "cad/out" $Design }
+if (-not $MainScad) { $MainScad = Join-Path (Join-Path (Join-Path "cad/designs" $Design) "src") "main.scad" }
 
 function Resolve-OpenScadExe {
   param([string] $ExplicitPath)
@@ -120,7 +126,9 @@ function Resolve-PartId {
   if ($ConfigData.ContainsKey("part")) {
     $p = [string]$ConfigData["part"]
     if ($p -eq "feed_mount") { return 0 }
-    if ($p -eq "fit_sleeve") { return 1 }
+    if ($p -eq "helical_former") { return 1 }
+    if ($p -eq "fit_sleeve") { return 1 } # legacy alias
+    if ($p -eq "yagi_mount") { return 0 }
     throw "Unknown part name '$p'. Add 'part_id' to the config."
   }
   return 0
@@ -143,6 +151,7 @@ $outPng = Join-Path $OutDir "$PartName.png"
 $defines = ConvertTo-OpenScadDefines -ConfigData $configData
 
 Write-Info "Config: $Config"
+Write-Info "Design: $Design"
 Write-Info "PartName: $PartName"
 Write-Info "OutDir: $OutDir"
 

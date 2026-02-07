@@ -474,36 +474,46 @@ The original Ku feed stack appears to be a bonded/glued assembly:
 * **Plastic tube section** (middle): bonded to the metal post/tube
 * **Metal reflector/cap** (top): bonded to the plastic tube
 
-## Revised mechanical plan (prototype around the existing plastic tube datum)
+## Revised mechanical plan (preserve focus datum, replace tube interface)
 
-The goal for the first iteration is to keep the existing center stack (metal post/tube + 33 mm plastic tube) and use the plastic tube as the mechanical datum for a printable helical former.
+The project's mechanical reference is still the same:
 
-* The new feed former will **slip over the 33 mm OD plastic tube** (no bolt pattern needed for the first iteration).
-* The former can expand to a larger diameter (e.g., ~60–65 mm OD) to support the required 1694.1 MHz helix geometry (typical helix diameter is larger than 33 mm).
-* Later iterations will add **grooves** to guide the helix turns and keep the radiating element centered on the dish axis.
+* **Focus datum:** the original **plastic tube tip position** (CAD: **`z=0`**)
+* **Mount seat plane:** the **metal post top** (CAD: **`z=-33mm`**)
 
-### First prototype: slip-fit + radome clearance cylinder (no grooves)
+All feed prototypes are designed so the **driven element / feed reference** is at **`z=0`**, and the mount interfaces to the dish at **`z=-33mm`**.
 
-To validate fit and packaging before adding grooves:
+### Shared mount interface (new)
 
-* Print a simple hollow cylinder that **slips over the 33 mm OD plastic tube**.
-* Make the cylinder **66 mm long** so the **tube tip (focus datum)** sits at the **mid-plane** of the print:
-  * bottom of print at **-33 mm**
-  * tube tip / focus at **0 mm**
-  * top of print at **+33 mm**
-* This prototype is strictly for:
-  * **slip-fit tuning** (clearance)
-  * **radome clearance check** (does it collide when closing the dome?)
+Instead of printing parts that slip *over* the old plastic tube, we print a short **33mm OD mount stub** near the seat plane:
 
-## Still needed before printing a final-fit design
+* The stub is **hollow** so an SMA pigtail can route down the metal shaft.
+* The stub length is intentionally short (insertion length is not critical); the critical invariant is keeping **`z=0`** at the original focus datum.
 
-For the first-pass design we are explicitly proceeding with the assumptions above. These items are only needed if/when we want a final-fit, dimension-locked print:
+### Helical prototype: thin-wall former + mount stub (no grooves yet)
 
-1. **Radome clearance (hard number):** to maximize feed performance without risking interference with the dome.
-2. **Chosen wire diameter** for the helix to finalize groove width/depth and retention features.
-3. **Plastic tube ID** (only if we decide to switch from slip-over to plug-in geometry).
+* Part: `helical_former` (OpenSCAD: `cad/designs/helical/src/parts/helical_former.scad`)
+* A thin-walled clearance cylinder (~60mm OD) above a short 33mm OD mount stub.
+* Future iterations add helix grooves + retention features sized to the chosen wire diameter.
 
-Once these are known, the 3D-printed mount and feed former can be fully specified for a repeatable build.
+### Yagi prototype: 3-element center-driven dipole yagi + mount stub
+
+* Part: `yagi_mount` (OpenSCAD: `cad/designs/yagi/src/parts/yagi_mount.scad`)
+* Prints a square backplane/boom with **3mm-wide grooves** for **10 AWG solid copper** elements (glue-in).
+* Element layout (center-to-center spacing **22mm** along the dish axis):
+  * **Director/front:** **66mm** at **`z=-22mm`**
+  * **Driven dipole:** **83mm** at **`z=0mm`** (includes a center cutout for feedpoint separation + coax exit)
+  * **Reflector/rear:** **87mm** at **`z=+22mm`**
+
+## Still needed before printing final-fit parts
+
+For first-pass prototypes we are explicitly proceeding with the assumptions above. These are only needed for final, repeatable, dimension-locked prints:
+
+1. **Radome clearance (hard number):** maximize performance without risking interference with the dome.
+2. **Helical wire diameter (final):** size grooves/retention features appropriately.
+3. **Dish mount interface tolerances:** confirm the holder/socket geometry so the 33mm mount stub can be dimensioned with appropriate clearance and retention.
+
+Once these are known, the printable mount + feed geometry can be locked down for a repeatable build.
 
 ---
 
@@ -513,10 +523,10 @@ This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed 
 
 ## Folder layout
 
-* `cad/src/` - OpenSCAD source (`main.scad` entrypoint + part modules)
-* `cad/configs/` - Parameter sets (JSON) for specific revisions
-* `cad/revisions/` - Local revision snapshot outputs (generated; ignored by git)
-* `cad/out/` - Scratch build outputs (generated; ignored by git)
+* `cad/designs/<design>/src/` - OpenSCAD source for a design (`main.scad` entrypoint + `parts/` + `lib/`)
+* `cad/designs/<design>/configs/` - Parameter sets (JSON) for specific revisions (committed)
+* `cad/revisions/<design>/` - Local revision snapshot outputs (generated; ignored by git)
+* `cad/out/<design>/` - Scratch build outputs (generated; ignored by git)
 * `scripts/` - PowerShell helpers for building and creating revisions
 
 ## Prerequisites
@@ -527,12 +537,15 @@ This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed 
 ## Common commands
 
 * Build a part to scratch output:
-  * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Config cad/configs/rev_0001.json -PartName feed_mount -OutDir cad/out`
+  * Helical example:
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json`
+  * Yagi example:
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design yagi -Config cad/designs/yagi/configs/rev_0001.json`
   * If `openscad` is not on `PATH`, pass `-OpenScadPath` (recommended on Windows):
-    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Config cad/configs/rev_0001.json -PartName feed_mount -OutDir cad/out -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
-* Snapshot a new numbered revision (creates `cad/revisions/rev_000N/` and `cad/configs/rev_000N.json`):
-  * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -BaseConfig cad/configs/rev_0001.json -PartName feed_mount`
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
+* Snapshot a new numbered revision for a design (creates `cad/revisions/<design>/rev_000N/` and `cad/designs/<design>/configs/rev_000N.json`):
+  * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -Design helical -BaseConfig cad/designs/helical/configs/rev_0003.json`
   * With explicit OpenSCAD path:
-    * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -BaseConfig cad/configs/rev_0001.json -PartName feed_mount -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_new_revision.ps1 -Design helical -BaseConfig cad/designs/helical/configs/rev_0003.json -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
 
 See `playbooks/how_to_iterate_openscad_designs.md` for the full workflow.

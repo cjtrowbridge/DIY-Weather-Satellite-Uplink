@@ -1,4 +1,7 @@
 param(
+  [Parameter(Mandatory = $false)]
+  [string] $Design = "helical",
+
   [Parameter(Mandatory = $true)]
   [string] $BaseConfig,
 
@@ -6,13 +9,13 @@ param(
   [string] $PartName,
 
   [Parameter(Mandatory = $false)]
-  [string] $RevisionsDir = "cad/revisions",
+  [string] $RevisionsDir,
 
   [Parameter(Mandatory = $false)]
-  [string] $ConfigsDir = "cad/configs",
+  [string] $ConfigsDir,
 
   [Parameter(Mandatory = $false)]
-  [string] $MainScad = "cad/src/main.scad",
+  [string] $MainScad,
 
   [Parameter(Mandatory = $false)]
   [string] $OpenScadPath,
@@ -26,6 +29,10 @@ $ErrorActionPreference = "Stop"
 function Write-Info([string] $Message) { Write-Host "[rev] $Message" }
 
 if (-not (Test-Path $BaseConfig)) { throw "BaseConfig not found: $BaseConfig" }
+
+if (-not $RevisionsDir) { $RevisionsDir = Join-Path "cad/revisions" $Design }
+if (-not $ConfigsDir) { $ConfigsDir = Join-Path (Join-Path "cad/designs" $Design) "configs" }
+if (-not $MainScad) { $MainScad = Join-Path (Join-Path (Join-Path "cad/designs" $Design) "src") "main.scad" }
 
 New-Item -ItemType Directory -Force -Path $RevisionsDir | Out-Null
 New-Item -ItemType Directory -Force -Path $ConfigsDir | Out-Null
@@ -81,6 +88,7 @@ if (-not $PartName) {
 }
 
 Write-Info "Creating $revName"
+Write-Info "Design: $Design"
 Write-Info "BaseConfig: $BaseConfig"
 
 if (-not $DryRun) {
@@ -95,6 +103,7 @@ Set-Content -Path $paramsPath -Value $json -Encoding UTF8
 
 $buildScript = Join-Path $PSScriptRoot "scad_build.ps1"
 $buildArgs = @(
+  "-Design", $Design,
   "-Config", $configPath,
   "-PartName", $PartName,
   "-OutDir", $revDir,
