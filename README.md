@@ -499,7 +499,12 @@ Instead of printing parts that slip *over* the old plastic tube, we print a shor
 ### Yagi prototype: 3-element center-driven dipole yagi + mount stub
 
 * Part: `yagi_mount` (OpenSCAD: `cad/designs/yagi/src/parts/yagi_mount.scad`)
-* Prints a square backplane/boom with **3mm-wide grooves** for **10 AWG solid copper** elements (glue-in).
+* Prints a backplane/boom with **partial-depth grooves** for **~6mm^2 solid copper** elements (glue-in).
+  * Grooves are sized so the wire is **fully recessed** (does not protrude above the card face).
+  * Grooves are positioned so the wire **centerline aligns with the mount stub axis** (CAD: **`y=0`**).
+  * Grooves do **not** cut through the card thickness; a **back wall remains** for strength + glue surface.
+  * Each groove length is the element length plus **+1mm margin on each end** (wire still must be cut to the exact RF length).
+  * Element wire lengths are **RF-critical**; cut elements to the exact lengths below.
 * Element layout (center-to-center spacing **22mm** along the dish axis):
   * **Director/front:** **66mm** at **`z=-22mm`**
   * **Driven dipole:** **83mm** at **`z=0mm`** (includes a center cutout for feedpoint separation + coax exit)
@@ -540,7 +545,7 @@ This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed 
   * Helical example:
     * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json`
   * Yagi example:
-    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design yagi -Config cad/designs/yagi/configs/rev_0001.json`
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design yagi -Config cad/designs/yagi/configs/rev_0002.json`
   * If `openscad` is not on `PATH`, pass `-OpenScadPath` (recommended on Windows):
     * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
 * Snapshot a new numbered revision for a design (creates `cad/revisions/<design>/rev_000N/` and `cad/designs/<design>/configs/rev_000N.json`):
