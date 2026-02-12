@@ -510,6 +510,12 @@ Instead of printing parts that slip *over* the old plastic tube, we print a shor
   * **Driven dipole:** **83mm** at **`z=0mm`** (includes a center cutout for feedpoint separation + coax exit)
   * **Reflector/rear:** **87mm** at **`z=+22mm`**
 
+### Yagi card-only prototype: element backplane only (no stub/plug)
+
+* Part: `yagi_card` (OpenSCAD: `cad/designs/yagi_card/src/parts/yagi_card.scad`)
+* Prints only the backplane/boom + grooves (same element layout as `yagi_mount`) for rapid fit checks and element placement without committing to the mount stub geometry.
+* By default the card is positioned to match the mounted yagi (`card_bottom_z = -mount_seat_to_focus + 6mm`), so the driven element stays at `z=0` when the card is later paired with a separate plug/stub.
+
 ## Still needed before printing final-fit parts
 
 For first-pass prototypes we are explicitly proceeding with the assumptions above. These are only needed for final, repeatable, dimension-locked prints:
@@ -546,6 +552,8 @@ This repo uses a simple, local OpenSCAD workflow (no CI) to iterate on the feed 
     * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json`
   * Yagi example:
     * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design yagi -Config cad/designs/yagi/configs/rev_0002.json`
+  * Yagi card-only example:
+    * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design yagi_card -Config cad/designs/yagi_card/configs/rev_0001.json`
   * If `openscad` is not on `PATH`, pass `-OpenScadPath` (recommended on Windows):
     * `powershell -ExecutionPolicy Bypass -File scripts/scad_build.ps1 -Design helical -Config cad/designs/helical/configs/rev_0003.json -OpenScadPath "C:\Program Files (x86)\OpenSCAD\openscad.exe"`
 * Snapshot a new numbered revision for a design (creates `cad/revisions/<design>/rev_000N/` and `cad/designs/<design>/configs/rev_000N.json`):
