@@ -1,0 +1,13 @@
+﻿{
+    "radome_headroom":  38,
+    "part":  "fit_sleeve",
+    "sleeve_total_len":  66,
+    "dish_diameter":  330,
+    "sleeve_outer_d":  60,
+    "tube_length":  33,
+    "tube_od":  33,
+    "sleeve_insert_depth":  33,
+    "sleeve_wall":  3,
+    "focus_length":  114,
+    "sleeve_clearance":  0.4
+}
